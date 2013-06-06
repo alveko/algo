@@ -1,4 +1,0 @@
-
-valgrind --tool=massif ./rmq
-ms_print massif.out.* | egrep '^ *([0-9,]+ +){3}|total' | sort -u -k 3 | tail -2
-
