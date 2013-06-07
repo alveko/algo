@@ -27,9 +27,3 @@ $(EXE): $(OBJ)
 
 clean:
 	rm -f $(EXE) *.o massif.out.* out_*
-
-memtest: all
-	@rm -f massif.out.*
-	@valgrind --tool=massif ./$(EXE) >/dev/null 2>&1
-	@ms_print massif.out.* | egrep '^ *([0-9,]+ +){3}|total' | sort -u -k 3 | tail -2 | sort
-	@rm -f massif.out.*
