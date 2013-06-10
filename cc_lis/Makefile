@@ -1,6 +1,8 @@
-CC=g++
-CFLAGS=-std=c++11 -c -Wall -g
-LDFLAGS=
+CXX	= g++
+CF_REL	= -c -Wall -O3
+CF_DBG	= -c -Wall -g -DDEBUG
+CFLAGS	= -std=c++11 $(CF_REL) -I/usr/local/include -I../../
+LDFLAGS	= -L/usr/local/lib -lboost_program_options
 
 SRC=lis.cc
 OBJ=$(SRC:.cc=.o)
@@ -8,13 +10,16 @@ EXE=lis
 
 .PHONY: all clean test
 
-all: $(SRC) $(EXE)
+all:	$(SRC) $(EXE)
+
+debug:	CFLAGS = $(CF_DBG)
+debug:	all
 
 $(EXE): $(OBJ) 
-	$(CC) $(LDFLAGS) $(OBJ) -o $@
+	$(CXX) $(LDFLAGS) $(OBJ) -o $@
 
 .cc.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $< -o $@
 
 clean:
 	rm -f $(EXE) $(OBJ) *.o
