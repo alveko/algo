@@ -1,7 +1,10 @@
 CXX	= g++
-CF_REL	= -c -Wall -O3
-CF_DBG	= -c -Wall -g -DDEBUG
-CFLAGS	= -std=c++11 $(CF_REL) -I/usr/local/include -I../../
+CF_OPT	= -std=c++11 -c -Wall
+CF_REL	= -O3
+CF_DBG	= -g -DDEBUG
+CF_INC	= -I/usr/local/include -I../..
+CFLAGS	= $(CF_OPT) $(CF_REL) $(CF_INC)
+
 LDFLAGS	= -L/usr/local/lib -lboost_program_options
 
 SRC	= lis.cc
@@ -10,7 +13,7 @@ EXE	= lis
 
 .PHONY: all clean test
 all:	$(SRC) $(EXE)
-debug:	CFLAGS = $(CF_DBG)
+debug:	CF_REL = $(CF_DBG)
 debug:	all
 
 $(EXE): $(OBJ) 
