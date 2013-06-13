@@ -10,7 +10,7 @@ def tc01_nlogn():
     cmd = "./lis --lis nlogn --size $x"
 
     test_utils.run_seq_time("Testing run time:",
-                            seq, cmd, "out_time_nlogn", 1)
+                            seq, cmd, "out_time_nlogn", 5)
 
     test_utils.run_seq_memo("Testing memory usage:",
                             seq, cmd, "out_memo_nlogn", 1, "mb")
@@ -44,7 +44,7 @@ def run_gnuplot():
               y2rmax  = "10",
               y2factor = "0.001")
     test_utils.gnuplot_1x2y(**gp)
-    
+
     gp = dict(outpng  = "plot_nlogn.png",
               title   = "LIS - Algorithm O(N log(N))^{}",
               xlabel  = "Size of the input sequence",
@@ -53,7 +53,9 @@ def run_gnuplot():
               title1  = "time",
               title2  = "memory",
               file1   = "out_time_nlogn",
-              file2   = "out_memo_nlogn")
+              file2   = "out_memo_nlogn",
+              y1rmin  = "*",
+              y1rmax  = "10")
     test_utils.gnuplot_1x2y(**gp)
 
 def main():
