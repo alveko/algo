@@ -16,14 +16,14 @@ all:	$(SRC) $(EXE)
 debug:	CF_REL = $(CF_DBG)
 debug:	all
 
-$(EXE): $(OBJ) 
-	$(CXX) $(OBJ) -o $@ $(LDFLAGS) 
+$(EXE): $(OBJ)
+	$(CXX) $(OBJ) -o $@ $(LDFLAGS)
 
 .cc.o:
 	$(CXX) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f $(EXE) $(OBJ) *.o massif.out.* out_*
+	rm -f $(EXE) *.o massif.out.* out_*
 
 test: clean all
 	@for tc in `find tcs -type f | sort`; do \
