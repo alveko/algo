@@ -1,26 +1,23 @@
 CXX	= g++
-CF_REL	= -c -Wall -O3
-CF_DBG	= -c -Wall -g -DDEBUG
-CFLAGS	= $(CF_REL) -I/usr/local/include
+CF_OPT	= -std=c++11 -c -Wall
+CF_REL	= -O3
+CF_DBG	= -g -DDEBUG
+CF_INC	= -I/usr/local/include -I../..
+CFLAGS	= $(CF_OPT) $(CF_REL) $(CF_INC)
+
 LDFLAGS	= -L/usr/local/lib -lboost_program_options
 
-SRC	= \
-	rmq.cc \
-	rmq_main.cc \
-	rmq_naive.cc \
-	rmq_sparse_table.cc \
-	rmq_segment_tree.cc
-
+SRC	= rmq.cc
 OBJ	= $(SRC:.cc=.o)
 EXE	= rmq
 
+.PHONY: all clean test
 all:	$(SRC) $(EXE)
-
-debug:	CFLAGS = $(CF_DBG)
+debug:	CF_REL = $(CF_DBG)
 debug:	all
 
-$(EXE): $(OBJ) 
-	$(CXX) $(OBJ) -o $@ $(LDFLAGS) 
+$(EXE): $(OBJ)
+	$(CXX) $(OBJ) -o $@ $(LDFLAGS)
 
 .cc.o:
 	$(CXX) $(CFLAGS) $< -o $@
