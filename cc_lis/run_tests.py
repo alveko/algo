@@ -33,30 +33,30 @@ def run_tests():
 def run_gnuplot():
     gp = dict(outpng  = "plot_dp.png",
               title   = "LIS - Dynamic Programming O(N^{2})",
-              xlabel  = "Size of the input sequence",
-              y1label = "Time (sec)",
-              y2label = "Memory (Mb)",
+              labelx  = "Size of the input sequence",
+              labely1 = "Time (sec)",
+              labely2 = "Memory (Mb)",
               title1  = "time",
               title2  = "memory",
               file1   = "out_time_dp",
               file2   = "out_memo_dp",
-              y2rmin  = "*",
-              y2rmax  = "10",
-              y2factor = "0.001")
-    test_utils.gnuplot_1x2y(**gp)
+              rminy2  = "*",
+              rmaxy2  = "10",
+              factory2 = "0.001")
+    test_utils.gnuplot_x1y2p2(gp)
 
     gp = dict(outpng  = "plot_nlogn.png",
               title   = "LIS - Algorithm O(N log(N))^{}",
-              xlabel  = "Size of the input sequence",
-              y1label = "Time (sec)",
-              y2label = "Memory (Mb)",
+              labelx  = "Size of the input sequence",
+              labely1 = "Time (sec)",
+              labely2 = "Memory (Mb)",
               title1  = "time",
               title2  = "memory",
               file1   = "out_time_nlogn",
               file2   = "out_memo_nlogn",
-              y1rmin  = "*",
-              y1rmax  = "10")
-    test_utils.gnuplot_1x2y(**gp)
+              rminy1  = "*",
+              rmaxy1  = "10")
+    test_utils.gnuplot_x1y2p2(gp)
 
 def main():
     run_tests()

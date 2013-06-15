@@ -72,7 +72,7 @@ public:
 
     void rmq_run()
     {
-        if (params.rmqt & RmqParams::rmqt_alltest) {
+        if (params.rmqt == RmqParams::rmqt_alltest) {
             // test all possible queries (quadratic time)
             for (size_t i = 0; i < params.size; i++) {
                 for (size_t j = i; j < params.size; j++) {
@@ -99,16 +99,15 @@ public:
         if (params.rmqt & RmqParams::rmqt_naive) {
             rmq_naive = algo::rmq_naive_linear(v.begin(), v.end(), i, j);
         }
-
         if (params.rmqt & RmqParams::rmqt_sparsetable) {
             rmq_spst = algo::rmq_sparse_table_query(spst, v.begin(), v.end(), i, j);
         }
-
         if (params.rmqt & RmqParams::rmqt_segmenttree) {
             rmq_segt = algo::rmq_segment_tree_query(v.begin(), v.end(), segt, i, j);
         }
 
-        if (params.rmqt & RmqParams::rmqt_all &&
+        if ((params.rmqt == RmqParams::rmqt_all ||
+             params.rmqt == RmqParams::rmqt_alltest) &&
             ! (v[rmq_naive] == v[rmq_spst] &&
                v[rmq_spst]  == v[rmq_segt])) {
             std::cout <<
@@ -165,11 +164,10 @@ int main(int argc, char *argv[])
         rmq.params.rmqt = RmqProblemHelper::RmqParams::rmqt_segmenttree;
     if (vm["rmq"].as<std::string>() == "all")
         rmq.params.rmqt = RmqProblemHelper::RmqParams::rmqt_all;
-    if (vm["rmq"].as<std::string>() == "test")
+    if (vm["rmq"].as<std::string>() == "alltest")
         rmq.params.rmqt = RmqProblemHelper::RmqParams::rmqt_alltest;
 
     rmq.rmq_init();
-
     rmq.rmq_run();
 
     return 0;

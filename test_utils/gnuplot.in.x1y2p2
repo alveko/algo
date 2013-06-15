@@ -1,0 +1,58 @@
+
+### Default variables values
+
+if (!exists("outpng"))  outpng  = "out.png"
+
+if (!exists("title1"))  title   = "Nice title"
+if (!exists("labelx"))  labelx  = "Label X"
+if (!exists("labely1")) labely1 = "Label Y1"
+if (!exists("labely2")) labely2 = "Label Y2"
+if (!exists("title1"))  title1  = "title1"
+if (!exists("title2"))  title2  = "title2"
+if (!exists("file1"))   file1   = "input_file1"
+if (!exists("file2"))   file2   = "input_file2"
+
+if (!exists("factorx"))  factorx  = 1
+if (!exists("factory1")) factory1 = 1
+if (!exists("factory2")) factory2 = 1
+
+if (!exists("color1")) color1 = "red"
+if (!exists("color2")) color2 = "dark-blue"
+
+### Properties
+
+set term pngcairo enhance
+set title font "-Bold,12"
+
+if (exists("rminx")  && exists("rmaxx"))  set xrange  [rminx:rmaxx]
+if (exists("rminy1") && exists("rmaxy1")) set yrange  [rminy1:rmaxy1]
+if (exists("rminy2") && exists("rmaxy2")) set y2range [rminy2:rmaxy2]
+
+set xtics  font ",8"
+set ytics  font ",8" tc rgb color1
+set y2tics font ",8" tc rgb color2
+set ytics  nomirror
+
+set grid
+set mxtics
+set mytics
+set format x "%.0t*10^{%T}"
+
+set linetype 1 linewidth 2 linecolor rgb color1
+set linetype 2 linewidth 1 linecolor rgb color2
+set style line 1 lt 1 pt 1 ps 2
+set style line 2 lt 2 pt 4 ps 1
+
+set key left vertical Left reverse font ",10"
+
+### Plot
+
+set output outpng
+set title   title
+set xlabel  labelx
+set ylabel  labely1 offset +2 tc rgb color1
+set y2label labely2 offset -2 tc rgb color2
+
+plot \
+file1 u ($1*factorx):($2*factory1) w linespoints linestyle 1 title title1 axes x1y1, \
+file2 u ($1*factorx):($2*factory2) w linespoints linestyle 2 title title2 axes x1y2
