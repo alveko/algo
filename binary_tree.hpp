@@ -10,7 +10,7 @@
 #define ALGO_BINARY_TREE_HPP
 
 #include <map>
-//#include <list>
+#include <stack>
 #include <queue>
 #include <stdlib.h>  // rand()
 
@@ -26,7 +26,7 @@ namespace algo
     struct binary_tree_node
     {
         using data_type = T;
-        T data;
+        data_type data;
         struct binary_tree_node *left;
         struct binary_tree_node *right;
     };
@@ -74,12 +74,24 @@ namespace algo
                                  TreeNode* TreeNode::* left  = &TreeNode::left,
                                  TreeNode* TreeNode::* right = &TreeNode::right)
     {
-        if (!root) {
-            return;
+        std::stack<TreeNode *> stack;
+        TreeNode *node = root;
+
+        while (node || !stack.empty()) {
+
+            // go left as deep as possible, push to stack
+            while (node) {
+                stack.push(node);
+                node = node->*left;
+            }
+
+            // visit the stack's top
+            visitor(stack.top());
+
+            // go to the top's right child and pop the top
+            node = stack.top()->*right;
+            stack.pop();
         }
-        binary_tree_traverse_inorder(root->*left, visitor);
-        visitor(root);
-        binary_tree_traverse_inorder(root->*right, visitor);
     }
 
     template <typename TreeNode, typename Visitor>
@@ -88,12 +100,22 @@ namespace algo
                                   TreeNode* TreeNode::* left  = &TreeNode::left,
                                   TreeNode* TreeNode::* right = &TreeNode::right)
     {
-        if (!root) {
-            return;
+        std::stack<TreeNode *> stack;
+        stack.push(root);
+
+        while (!stack.empty()) {
+
+            TreeNode *node = stack.top();
+            stack.pop();
+
+            visitor(node);
+
+            if (node->*right)
+                stack.push(node->*right);
+
+            if (node->*left)
+                stack.push(node->*left);
         }
-        visitor(root);
-        binary_tree_traverse_preorder(root->*left, visitor);
-        binary_tree_traverse_preorder(root->*right, visitor);
     }
 
     template <typename TreeNode, typename Visitor>
@@ -102,11 +124,51 @@ namespace algo
                                    TreeNode* TreeNode::* left  = &TreeNode::left,
                                    TreeNode* TreeNode::* right = &TreeNode::right)
     {
+        //std::stack<TreeNode *> stack;
+        //TreeNode *node = root;
+
+        // TBD
+    }
+
+    template <typename TreeNode, typename Visitor>
+    void
+    binary_tree_traverse_inorder_rec(TreeNode* root, Visitor visitor,
+                                     TreeNode* TreeNode::* left  = &TreeNode::left,
+                                     TreeNode* TreeNode::* right = &TreeNode::right)
+    {
         if (!root) {
             return;
         }
-        binary_tree_traverse_postorder(root->*left, visitor);
-        binary_tree_traverse_postorder(root->*right, visitor);
+        binary_tree_traverse_inorder_rec(root->*left, visitor);
+        visitor(root);
+        binary_tree_traverse_inorder_rec(root->*right, visitor);
+    }
+
+    template <typename TreeNode, typename Visitor>
+    void
+    binary_tree_traverse_preorder_rec(TreeNode* root, Visitor visitor,
+                                      TreeNode* TreeNode::* left  = &TreeNode::left,
+                                      TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!root) {
+            return;
+        }
+        visitor(root);
+        binary_tree_traverse_preorder_rec(root->*left, visitor);
+        binary_tree_traverse_preorder_rec(root->*right, visitor);
+    }
+
+    template <typename TreeNode, typename Visitor>
+    void
+    binary_tree_traverse_postorder_rec(TreeNode* root, Visitor visitor,
+                                       TreeNode* TreeNode::* left  = &TreeNode::left,
+                                       TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!root) {
+            return;
+        }
+        binary_tree_traverse_postorder_rec(root->*left, visitor);
+        binary_tree_traverse_postorder_rec(root->*right, visitor);
         visitor(root);
     }
 
@@ -144,21 +206,25 @@ namespace algo
         }
     }
 
-    template <typename TreeNode, typename DataType = typename TreeNode::data_type>
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type>
     void
     binary_tree_print_node(TreeNode* node,
-                           std::ostream &outs = std::cout, int nodewidth = 4,
+                           std::ostream &out = std::cout,
                            DataType TreeNode::* data = &TreeNode::data)
     {
-        outs << "("
-             << std::setfill('0') << std::setw(nodewidth-2)
-             << node->*data << ")";
+        out << "(" << std::setfill('0') << std::setw(2) << node->data << ")";
     }
 
-    template <typename TreeNode, typename DataType = typename TreeNode::data_type>
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type,
+              typename PrintNode = decltype(&binary_tree_print_node<TreeNode,
+                                                                    DataType>)>
     void
     binary_tree_print(TreeNode* root,
-                      std::ostream &outs = std::cout, int nodewidth = 4,
+                      std::ostream &outs = std::cout,
+                      PrintNode printnode = &binary_tree_print_node<TreeNode,
+                                                                    DataType>,
                       DataType  TreeNode::* data  = &TreeNode::data,
                       TreeNode* TreeNode::* left  = &TreeNode::left,
                       TreeNode* TreeNode::* right = &TreeNode::right)
@@ -190,6 +256,7 @@ namespace algo
         binary_tree_traverse_inorder(root, count_columns);
 
         //
+        const int nodewidth = 4;
         std::stringstream ssline;   // current line (the line with nodes)
         std::stringstream ssnext;   // next line (the line with "/" and "\")
         std::stringstream ssspace, ssunder; // space and underscore blocks
@@ -218,7 +285,8 @@ namespace algo
                     std::fill_n(outline, ls - 1, ssunder.str());
                     std::fill_n(outnext, ls - 1, ssspace.str());
                 }
-                binary_tree_print_node(node, ssline, nodewidth, data);
+                printnode(node, ssline, data);
+                //printnode(node,0);
                 ssnext << ssspace.str();
                 if (rs) {
                     std::fill_n(outline, rs - 1, ssunder.str());

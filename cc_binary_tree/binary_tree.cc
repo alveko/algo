@@ -36,15 +36,27 @@ int main(int argc, char *argv[])
                                           <BinaryTreeNode>(cnt++));
     }
 
-    std::cout << "inorder   : ";
+    std::cout << "inorder_rec  : ";
+    algo::binary_tree_traverse_inorder_rec(root, visitor);
+    std::cout << std::endl;
+
+    std::cout << "inorder      : ";
     algo::binary_tree_traverse_inorder(root, visitor);
     std::cout << std::endl;
 
-    std::cout << "preorder  : ";
+    std::cout << "preorder_rec : ";
+    algo::binary_tree_traverse_preorder_rec(root, visitor);
+    std::cout << std::endl;
+
+    std::cout << "preorder     : ";
     algo::binary_tree_traverse_preorder(root, visitor);
     std::cout << std::endl;
 
-    std::cout << "postorder : ";
+    std::cout << "postorder_rec: ";
+    algo::binary_tree_traverse_postorder_rec(root, visitor);
+    std::cout << std::endl;
+
+    std::cout << "postorder    : ";
     algo::binary_tree_traverse_postorder(root, visitor);
     std::cout << std::endl;
 
