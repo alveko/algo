@@ -70,111 +70,179 @@ namespace algo
 
     template <typename TreeNode, typename Visitor>
     void
-    binary_tree_traverse_inorder(TreeNode* root, Visitor visitor,
+    binary_tree_traverse_inorder(TreeNode* node, Visitor visit,
                                  TreeNode* TreeNode::* left  = &TreeNode::left,
                                  TreeNode* TreeNode::* right = &TreeNode::right)
     {
-        std::stack<TreeNode *> stack;
-        TreeNode *node = root;
-
+        std::stack<TreeNode*> stack;
         while (node || !stack.empty()) {
-
-            // go left as deep as possible, push to stack
-            while (node) {
+            if (node) {
+                // *** go left as deep as possible
+                // push nodes on the way to the stack
                 stack.push(node);
                 node = node->*left;
+            } else {
+                // *** we are at the bottom (or backtracking up)
+                // 1. pop from the stack
+                node = stack.top();
+                stack.pop();
+                // 2. visit the node
+                visit(node);
+                // 3. go to the right child
+                node = node->*right;
             }
-
-            // visit the stack's top
-            visitor(stack.top());
-
-            // go to the top's right child and pop the top
-            node = stack.top()->*right;
-            stack.pop();
         }
     }
 
     template <typename TreeNode, typename Visitor>
     void
-    binary_tree_traverse_preorder(TreeNode* root, Visitor visitor,
+    binary_tree_traverse_preorder(TreeNode* node, Visitor visit,
                                   TreeNode* TreeNode::* left  = &TreeNode::left,
                                   TreeNode* TreeNode::* right = &TreeNode::right)
     {
-        std::stack<TreeNode *> stack;
-        stack.push(root);
-
-        while (!stack.empty()) {
-
-            TreeNode *node = stack.top();
-            stack.pop();
-
-            visitor(node);
-
-            if (node->*right)
-                stack.push(node->*right);
-
-            if (node->*left)
-                stack.push(node->*left);
+        std::stack<TreeNode*> stack;
+        while (node || !stack.empty()) {
+            if (node) {
+                // *** go left as deep as possible
+                // 1. visit the node
+                visit(node);
+                // 2. if right child exists, push it to the stack
+                if (node->*right)
+                    stack.push(node->*right);
+                // 3. go to the next left child
+                node = node->*left;
+            } else {
+                // *** we are at the bottom (or backtracking up)
+                // pop from the stack (stored right childs)
+                node = stack.top();
+                stack.pop();
+            }
         }
     }
 
     template <typename TreeNode, typename Visitor>
     void
-    binary_tree_traverse_postorder(TreeNode* root, Visitor visitor,
+    binary_tree_traverse_postorder(TreeNode* node, Visitor visit,
                                    TreeNode* TreeNode::* left  = &TreeNode::left,
                                    TreeNode* TreeNode::* right = &TreeNode::right)
     {
-        //std::stack<TreeNode *> stack;
-        //TreeNode *node = root;
+        if (!node) {
+            return;
+        }
 
-        // TBD
+        std::stack<TreeNode*> stack;
+        stack.push(node);
+        TreeNode* prev = nullptr;
+
+        while (!stack.empty()) {
+
+            // every iteration starts with
+            // the node at the top of the stack
+            node = stack.top();
+
+            // (1) basic case, going down
+            if (prev == nullptr ||            // if just started (no prev)
+                prev->*left == node ||        // or if went down left or right
+                prev->*right == node) {       // on the previous iteration
+                                              // => continue to go down!
+                if (node->*left)              // if the left child exists,
+                    stack.push(node->*left);  //    => go to the left next
+                else if (node->*right)        // else! if the right child exists,
+                    stack.push(node->*right); //    => go to the right next
+
+            // (2) backtracing from the left
+            } else if (node->*left == prev) { // just backtracked from the left
+                                              // => shall go to the right now
+                if(node->*right)              // if the right child exists,
+                    stack.push(node->*right); //    => go to the right next
+
+            // (3) otherwise, ready to visit
+            } else {                          // implicitly: (node == prev) or
+                                              // just backtracked from the right
+                visit(node);
+                stack.pop();
+            }
+            prev = node;                      // update the prev position
+        }
     }
 
     template <typename TreeNode, typename Visitor>
     void
-    binary_tree_traverse_inorder_rec(TreeNode* root, Visitor visitor,
+    binary_tree_traverse_postorder2(TreeNode* node, Visitor visit,
+                                    TreeNode* TreeNode::* left  = &TreeNode::left,
+                                    TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        std::stack<TreeNode*> stack;
+
+        // The 2 stacks solution for the iterative postorder traversal.
+        //
+        // First, we do the inversed postorder traversal (using 1st stack)
+        // and push the nodes into the 2nd stack.
+        // Second, we visit nodes as we pop them from the 2nd stack, thus
+        // obtaining them in the direct postorder.
+
+        // In order to get the inversed postorder, we run the preorder, but
+        // with the reversed child pointers and put nodes into the stack
+        // as we visit them.
+
+        binary_tree_traverse_preorder(node,
+                                      [ &stack ] (TreeNode* node) {
+                                          stack.push(node);
+                                      },
+                                      right, // instead of left!
+                                      left); // instead of right! :)
+
+        while (!stack.empty()) {
+            visit(stack.top());
+            stack.pop();
+        }
+    }
+
+    template <typename TreeNode, typename Visitor>
+    void
+    binary_tree_traverse_inorder_r(TreeNode* root, Visitor visit,
+                                   TreeNode* TreeNode::* left  = &TreeNode::left,
+                                   TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!root) {
+            return;
+        }
+        binary_tree_traverse_inorder_r(root->*left, visit);
+        visit(root);
+        binary_tree_traverse_inorder_r(root->*right, visit);
+    }
+
+    template <typename TreeNode, typename Visitor>
+    void
+    binary_tree_traverse_preorder_r(TreeNode* root, Visitor visit,
+                                    TreeNode* TreeNode::* left  = &TreeNode::left,
+                                    TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!root) {
+            return;
+        }
+        visit(root);
+        binary_tree_traverse_preorder_r(root->*left, visit);
+        binary_tree_traverse_preorder_r(root->*right, visit);
+    }
+
+    template <typename TreeNode, typename Visitor>
+    void
+    binary_tree_traverse_postorder_r(TreeNode* root, Visitor visit,
                                      TreeNode* TreeNode::* left  = &TreeNode::left,
                                      TreeNode* TreeNode::* right = &TreeNode::right)
     {
         if (!root) {
             return;
         }
-        binary_tree_traverse_inorder_rec(root->*left, visitor);
-        visitor(root);
-        binary_tree_traverse_inorder_rec(root->*right, visitor);
+        binary_tree_traverse_postorder_r(root->*left, visit);
+        binary_tree_traverse_postorder_r(root->*right, visit);
+        visit(root);
     }
 
     template <typename TreeNode, typename Visitor>
     void
-    binary_tree_traverse_preorder_rec(TreeNode* root, Visitor visitor,
-                                      TreeNode* TreeNode::* left  = &TreeNode::left,
-                                      TreeNode* TreeNode::* right = &TreeNode::right)
-    {
-        if (!root) {
-            return;
-        }
-        visitor(root);
-        binary_tree_traverse_preorder_rec(root->*left, visitor);
-        binary_tree_traverse_preorder_rec(root->*right, visitor);
-    }
-
-    template <typename TreeNode, typename Visitor>
-    void
-    binary_tree_traverse_postorder_rec(TreeNode* root, Visitor visitor,
-                                       TreeNode* TreeNode::* left  = &TreeNode::left,
-                                       TreeNode* TreeNode::* right = &TreeNode::right)
-    {
-        if (!root) {
-            return;
-        }
-        binary_tree_traverse_postorder_rec(root->*left, visitor);
-        binary_tree_traverse_postorder_rec(root->*right, visitor);
-        visitor(root);
-    }
-
-    template <typename TreeNode, typename Visitor>
-    void
-    binary_tree_traverse_levels(TreeNode* root, Visitor visitor,
+    binary_tree_traverse_levels(TreeNode* root, Visitor visit,
                                 TreeNode* TreeNode::* left  = &TreeNode::left,
                                 TreeNode* TreeNode::* right = &TreeNode::right)
     {
@@ -189,7 +257,7 @@ namespace algo
             queue.pop();
 
             // visit a node (node = nullptr means new level!)
-            visitor(node);
+            visit(node);
 
             if (node) {
                 // push any non-null children to the queue
@@ -256,11 +324,18 @@ namespace algo
         binary_tree_traverse_inorder(root, count_columns);
 
         //
-        const int nodewidth = 4;
         std::stringstream ssline;   // current line (the line with nodes)
         std::stringstream ssnext;   // next line (the line with "/" and "\")
         std::stringstream ssspace, ssunder; // space and underscore blocks
         std::stringstream ssleft, ssright;  // blocks with "/" and "\"
+
+        int nodewidth = 4;
+        TreeNode* tmp = binary_tree_new_node<TreeNode>();
+        printnode(tmp, ssline, data);
+        nodewidth = ssline.str().length();
+        ssline.str("");
+        delete tmp;
+
         ssspace << " " << std::setw(nodewidth-2) << " " << " ";
         ssunder.fill('_');
         ssunder << std::setw(nodewidth) << "";
