@@ -31,7 +31,17 @@ namespace algo
         struct binary_tree_node *right;
     };
 
-    template <typename TreeNode, typename DataType = typename TreeNode::data_type>
+    template<typename TreeNode>
+    struct binary_tree_node_traits
+    {
+    };
+
+    // T(node)->data
+    // T(node)->left
+    // T(node)->right
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type>
     TreeNode*
     binary_tree_new_node(DataType value = DataType(),
                          DataType  TreeNode::* data  = &TreeNode::data,
@@ -42,7 +52,20 @@ namespace algo
         newnode->*data  = value;
         newnode->*left  = nullptr;
         newnode->*right = nullptr;
+        std::cout << "+ new: " << newnode->*data << std::endl;
         return newnode;
+    }
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type>
+    void
+    binary_tree_delete_node(TreeNode* node,
+                            DataType  TreeNode::* data  = &TreeNode::data)
+    {
+        std::cout << "- delete: " << node->*data << std::endl;
+        node->left = nullptr;
+        node->right = nullptr;
+        delete node;
     }
 
     template <typename TreeNode>
@@ -52,7 +75,7 @@ namespace algo
                                 TreeNode* TreeNode::* right = &TreeNode::right)
     {
         if (!root)
-            return newnode;
+            return nullptr;
 
         TreeNode* node = root;
         TreeNode* prev = nullptr;
@@ -67,6 +90,136 @@ namespace algo
         prev->*child = newnode;
         return prev;
     }
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type,
+              typename Comparator = std::less<DataType> >
+    struct binary_tree_node_comparator
+    {
+        int operator()(TreeNode *n1, TreeNode *n2,
+                       DataType TreeNode::* data = &TreeNode::data,
+                       Comparator comp = Comparator())
+        {
+            return comp(n1->*data, n2->*data);
+        }
+    };
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type,
+              typename Comparator = std::less<DataType> >
+    TreeNode*
+    binary_tree_insert_bst(TreeNode* node, TreeNode* newnode,
+                           Comparator comp = Comparator(),
+                           DataType  TreeNode::* data  = &TreeNode::data,
+                           TreeNode* TreeNode::* left  = &TreeNode::left,
+                           TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!node)
+            return nullptr;
+
+        TreeNode* prev = nullptr;
+        TreeNode* TreeNode::* child = nullptr;
+
+        while (node) {
+            if (comp(node->*data, newnode->*data)) {
+                child = left;
+            } else {
+                child = right;
+            }
+            prev = node;
+            node = node->*child;
+        }
+        prev->*child = newnode;
+        return prev;
+    }
+
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type,
+              typename Comparator = std::less<DataType> >
+    bool
+    binary_tree_is_bst_node(TreeNode* node,
+                            Comparator comp = Comparator(),
+                            DataType  TreeNode::* data  = &TreeNode::data,
+                            TreeNode* TreeNode::* left  = &TreeNode::left,
+                            TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!node) {
+            return true;
+        }
+
+        if (node->*left) {
+            if (!comp(node->*left->*data, node->*data)) {
+                return false;
+            }
+        }
+
+        if (node->*right) {
+            if (!comp(node->*data, node->*right->*data)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type,
+              typename Comparator = std::less<DataType> >
+    int
+    binary_tree_is_bst(TreeNode* root,
+                       Comparator comp = Comparator(),
+                       DataType  TreeNode::* data  = &TreeNode::data,
+                       TreeNode* TreeNode::* left  = &TreeNode::left,
+                       TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        int notbst = 0;
+
+        auto check = [ & ] (TreeNode *node) {
+            notbst += binary_tree_is_bst_node(node, data, left, right);
+        };
+
+        binary_tree_traverse_inorder(root, check, left, right);
+        return notbst;
+    }
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type,
+              typename Comparator = std::less<DataType> >
+    bool
+    binary_tree_is_bst_r(TreeNode* node,
+                         Comparator comp = Comparator(),
+                         DataType  TreeNode::* data  = &TreeNode::data,
+                         TreeNode* TreeNode::* left  = &TreeNode::left,
+                         TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        if (!binary_tree_is_bst_node(node, comp, data, left, right)) {
+            return false;
+        }
+
+        return (binary_tree_insert_is_bst_r(node->*left, comp,
+                                            data, left, right) &&
+                binary_tree_insert_is_bst_r(node->*left, comp,
+                                            data, left, right));
+    }
+
+    template <typename TreeNode,
+              typename DataType = typename TreeNode::data_type>
+    void
+    binary_tree_delete(TreeNode* root,
+                       DataType  TreeNode::* data  = &TreeNode::data,
+                       TreeNode* TreeNode::* left  = &TreeNode::left,
+                       TreeNode* TreeNode::* right = &TreeNode::right)
+    {
+        // run inorder traversal and destroy the nodes
+        // as we visit them
+        binary_tree_traverse_inorder(root,
+                                     [ &data ] (TreeNode *node) {
+                                           binary_tree_delete_node(node, data);
+                                     },
+                                     left, right);
+    }
+
 
     template <typename TreeNode, typename Visitor>
     void
@@ -83,13 +236,12 @@ namespace algo
                 node = node->*left;
             } else {
                 // *** we are at the bottom (or backtracking up)
-                // 1. pop from the stack
-                node = stack.top();
-                stack.pop();
-                // 2. visit the node
-                visit(node);
-                // 3. go to the right child
-                node = node->*right;
+                // 1. go to the right child next
+                node = stack.top()->*right;      // It is important here
+                // 2. visit the node             // NOT to access the node
+                visit(stack.top());              // that has been visited, since
+                // 3. pop from the stack         // the visitor might have
+                stack.pop();                     // destroyed the node already!
             }
         }
     }
@@ -314,6 +466,9 @@ namespace algo
          *                (04)
         */
 
+        if (!root)
+            return;
+
         // First we do inroder traversal and map every node to
         // its inorder index. The inorder index is the column index in diagram.
         int icol = 0;
@@ -330,11 +485,9 @@ namespace algo
         std::stringstream ssleft, ssright;  // blocks with "/" and "\"
 
         int nodewidth = 4;
-        TreeNode* tmp = binary_tree_new_node<TreeNode>();
-        printnode(tmp, ssline, data);
+        printnode(root, ssline, data);
         nodewidth = ssline.str().length();
         ssline.str("");
-        delete tmp;
 
         ssspace << " " << std::setw(nodewidth-2) << " " << " ";
         ssunder.fill('_');

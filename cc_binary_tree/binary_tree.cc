@@ -24,22 +24,35 @@ void print_vector(const char *msg, const V &v) {
     std::cout << std::endl;
 }
 
-int main(int argc, char *argv[])
-{
-    srand(time(NULL));
-
-    int n = 25;
-    int cnt = 1;
-
-    BinaryTreeNode *root;
-    root = algo::binary_tree_new_node<BinaryTreeNode>(cnt++);
-
-    for (int i = cnt; i <= n; i++) {
-        algo::binary_tree_insert_randomly(root,
-                                          algo::binary_tree_new_node
-                                          <BinaryTreeNode>(cnt++));
+template <typename T>
+struct bar_functor {
+    int operator()(T value) {
+        std::cout << "bar_functor: " << value << std::endl;
+        return 0;
     }
+};
 
+template<typename T>
+int bar_function(T value)
+{
+    std::cout << "bar_function: " << value << std::endl;
+    return 0;
+}
+
+
+template<typename T,
+         typename Functor = decltype(bar_function<T>)>
+         //typename Functor = bar_functor<T>>
+void foo(T foo_value, Functor functor = bar_function<T>)
+{
+    std::cout << "*** foo: " << foo_value << std::endl;
+    std::cout << "*** calling func:" << std::endl;
+    functor(foo_value);
+}
+
+
+void print_tree(BinaryTreeNode *root)
+{
     auto v2v = [ ] (BinaryTreeNode *n, std::vector<BinaryTreeNode *> *v) {
         if (n)
             v->push_back(n);
@@ -88,6 +101,37 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
 
     algo::binary_tree_print(root);
+}
+
+
+int main(int argc, char *argv[])
+{
+    srand(time(NULL));
+
+    int n = 15;
+    int cnt = 1;
+
+    BinaryTreeNode *root;
+    root = algo::binary_tree_new_node<BinaryTreeNode>(cnt++);
+
+    for (int i = cnt; i <= n; i++) {
+        algo::binary_tree_insert_randomly(root,
+                                          algo::binary_tree_new_node
+                                          <BinaryTreeNode>(cnt++));
+    }
+
+    /*
+    algo::binary_tree_insert_bst(root,
+                                 algo::binary_tree_new_node
+                                 <BinaryTreeNode>(cnt++));
+    */
+    //algo::binary_tree_insert_bst(root,
+    //                             algo::binary_tree_new_node
+    //                             <BinaryTreeNode>(cnt++));
+
+    print_tree(root);
+
+    algo::binary_tree_delete(root);
 
     return 0;
 }
