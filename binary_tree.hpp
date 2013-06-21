@@ -166,23 +166,30 @@ namespace algo
     template <typename TreeNode,
               typename DataType = typename TreeNode::data_type,
               typename Comparator = std::less<DataType> >
-    int
+    bool
     binary_tree_is_bst(TreeNode* root,
                        Comparator comp = Comparator(),
                        DataType  TreeNode::* data  = &TreeNode::data,
                        TreeNode* TreeNode::* left  = &TreeNode::left,
                        TreeNode* TreeNode::* right = &TreeNode::right)
     {
-        int notbst = 0;
+        if (!root)
+            return true;
+
+        bool is_bst = true;
+        TreeNode *prev = nullptr;
 
         auto check = [ & ] (TreeNode *node) {
-            notbst += binary_tree_is_bst_node(node, data, left, right);
+            if (prev && !comp(prev->*data, node->*data))
+                is_bst = false;
+            prev = node;
         };
 
         binary_tree_traverse_inorder(root, check, left, right);
-        return notbst;
+        return is_bst;
     }
 
+    /*
     template <typename TreeNode,
               typename DataType = typename TreeNode::data_type,
               typename Comparator = std::less<DataType> >
@@ -202,6 +209,7 @@ namespace algo
                 binary_tree_insert_is_bst_r(node->*left, comp,
                                             data, left, right));
     }
+    */
 
     template <typename TreeNode,
               typename DataType = typename TreeNode::data_type>
