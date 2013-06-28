@@ -189,28 +189,6 @@ namespace algo
         return is_bst;
     }
 
-    /*
-    template <typename TreeNode,
-              typename DataType = typename TreeNode::data_type,
-              typename Comparator = std::less<DataType> >
-    bool
-    binary_tree_is_bst_r(TreeNode* node,
-                         Comparator comp = Comparator(),
-                         DataType  TreeNode::* data  = &TreeNode::data,
-                         TreeNode* TreeNode::* left  = &TreeNode::left,
-                         TreeNode* TreeNode::* right = &TreeNode::right)
-    {
-        if (!binary_tree_is_bst_node(node, comp, data, left, right)) {
-            return false;
-        }
-
-        return (binary_tree_insert_is_bst_r(node->*left, comp,
-                                            data, left, right) &&
-                binary_tree_insert_is_bst_r(node->*left, comp,
-                                            data, left, right));
-    }
-    */
-
     template <typename TreeNode,
               typename DataType = typename TreeNode::data_type>
     void
