@@ -18,8 +18,12 @@ namespace algo
 
     template<typename RandomIterator, typename DT =
              typename std::iterator_traits<RandomIterator>::difference_type>
-    void array_2d_transpose(RandomIterator arr, DT n, DT m)
+    void array_2d_transpose_v1(RandomIterator arr, DT n, DT m)
     {
+        if (n <= 1 || m <= 1) {
+            return;
+        }
+
         std::vector<bool> visited(n*m, false);
         const DT mn1 = m * n - 1;
         DT cycle = 0;
@@ -35,6 +39,38 @@ namespace algo
                     visited[i] = true;
                 } while (i != cycle);
             }
+        }
+    }
+
+    template<typename RandomIterator, typename DT =
+             typename std::iterator_traits<RandomIterator>::difference_type>
+    void array_2d_transpose(RandomIterator arr, DT n, DT m)
+    {
+        if (n <= 1 || m <= 1) {
+            return;
+        }
+
+        const DT mn1 = m * n - 1;
+        DT cycle = 0, i, k;
+
+        while (++cycle != mn1 - 1) {
+
+            k = 0;
+            i = cycle;
+            do  {
+                i = (n * i) % mn1;
+                k++;
+            } while (i > cycle);
+
+            if (k == 1 || i != cycle)
+                continue;
+
+            i = cycle;
+            do  {
+                i = (n * i) % mn1;
+                std::swap(arr[i], arr[cycle]);
+                visited[i] = true;
+            } while (i != cycle);
         }
     }
 
