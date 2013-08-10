@@ -51,25 +51,24 @@ namespace algo
         }
 
         const DT mn1 = m * n - 1;
-        DT cycle = 0, i, k;
+        DT cycle = 0, cycle_len, i;
 
         while (++cycle != mn1 - 1) {
 
-            k = 0;
+            cycle_len = 0;
             i = cycle;
             do  {
                 i = (n * i) % mn1;
-                k++;
+                cycle_len++;
             } while (i > cycle);
 
-            if (k == 1 || i != cycle)
+            if (cycle_len == 1 || i != cycle)
                 continue;
 
             i = cycle;
             do  {
                 i = (n * i) % mn1;
                 std::swap(arr[i], arr[cycle]);
-                visited[i] = true;
             } while (i != cycle);
         }
     }
