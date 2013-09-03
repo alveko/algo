@@ -38,8 +38,7 @@ def run_seq_memo(*args):
             "/get_mem_usage.sh -" + args[-1] + " ")
 
 def gnuplot(template, args):
-    ### open template and create gnupot process
-    f = open(testdir + "/" + template, "r")
+    ### create gnupot process
     process = subprocess.Popen('gnuplot', stdin=subprocess.PIPE)
 
     ### send parameters to gnuplot
@@ -47,6 +46,7 @@ def gnuplot(template, args):
         process.stdin.write(("%s = \"%s\"\n") % (k, v))
 
     ### send template to gnuplot
+    f = open(testdir + "/" + template, "r")
     for line in f:
         process.stdin.write(line)
 

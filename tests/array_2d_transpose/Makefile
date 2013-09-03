@@ -1,26 +1,26 @@
-CXX	= g++
-CF_OPT	= -std=c++11 -c -Wall
-CF_REL	= -O3
-CF_DBG	= -g -DDEBUG
-CF_INC	= -I/usr/local/include -I../..
-CFLAGS	= $(CF_OPT) $(CF_REL) $(CF_INC)
+CXX	?= g++
 
+CFLAGS	= -std=c++11 -c -Wall
+INCL	= -I/usr/local/include -I../../..
 LDFLAGS	= -L/usr/local/lib -lboost_program_options
 
+EXE	= array_2d_transpose
 SRC	= array_2d_transpose.cc
 OBJ	= $(SRC:.cc=.o)
-EXE	= array_2d_transpose
 
-.PHONY: all clean test
-all:	$(SRC) $(EXE)
-debug:	CF_REL = $(CF_DBG)
-debug:	all
+.PHONY: all clean
+
+all:	CFLAGS += -O3
+all:	$(EXE)
+
+debug:	CFLAGS += -g -DDEBUG
+debug:	$(EXE)
 
 $(EXE): $(OBJ)
 	$(CXX) $(OBJ) -o $@ $(LDFLAGS)
 
 .cc.o:
-	$(CXX) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $(INCL) $< -o $@
 
 clean:
-	rm -f $(EXE) *.o massif.out.* out_*
+	rm -f $(EXE) *.o
