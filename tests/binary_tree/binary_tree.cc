@@ -24,33 +24,6 @@ void print_vector(const char *msg, const V &v) {
     std::cout << std::endl;
 }
 
-template <typename T>
-struct bar_functor {
-    int operator()(T value) {
-        std::cout << "bar_functor: " << value << std::endl;
-        return 0;
-    }
-};
-
-template<typename T>
-int bar_function(T value)
-{
-    std::cout << "bar_function: " << value << std::endl;
-    return 0;
-}
-
-
-template<typename T,
-         typename Functor = decltype(bar_function<T>)>
-         //typename Functor = bar_functor<T>>
-void foo(T foo_value, Functor functor = bar_function<T>)
-{
-    std::cout << "*** foo: " << foo_value << std::endl;
-    std::cout << "*** calling func:" << std::endl;
-    functor(foo_value);
-}
-
-
 void print_tree(BinaryTreeNode *root)
 {
     auto v2v = [ ] (BinaryTreeNode *n, std::vector<BinaryTreeNode *> *v) {
@@ -66,9 +39,10 @@ void print_tree(BinaryTreeNode *root)
     algo::binary_tree_traverse_preorder_r(root, std::bind(v2v, _1, &vprer));
     algo::binary_tree_traverse_preorder(root, std::bind(v2v, _1, &vpre));
 
-    std::vector<BinaryTreeNode*> vpostr, vpost, vpost2;
+    std::vector<BinaryTreeNode*> vpostr, vpost, vpost2, vpost1;
     algo::binary_tree_traverse_postorder_r(root, std::bind(v2v, _1, &vpostr));
     algo::binary_tree_traverse_postorder(root, std::bind(v2v, _1, &vpost));
+    algo::binary_tree_traverse_postorder1(root, std::bind(v2v, _1, &vpost1));
     algo::binary_tree_traverse_postorder2(root, std::bind(v2v, _1, &vpost2));
 
     std::cout << std::endl;
@@ -86,10 +60,11 @@ void print_tree(BinaryTreeNode *root)
         print_vector("  vprer :", vprer);
         print_vector("  vpre  :", vpre);
     }
-    if (vpostr != vpost || vpostr != vpost2) {
+    if (vpostr != vpost || vpostr != vpost1 || vpost1 != vpost2) {
         std::cout << "Error!" << std::endl;
         print_vector("  vpostr :", vpostr);
         print_vector("  vpost  :", vpost);
+        print_vector("  vpost1 :", vpost1);
         print_vector("  vpost2 :", vpost2);
     }
 
