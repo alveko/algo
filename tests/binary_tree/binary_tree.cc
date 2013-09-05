@@ -3,9 +3,8 @@
 #include <algorithm>   // std::max()
 #include <iostream>    // std::cin, std::cout
 #include <functional>  // std::bind
-
-#include <stdlib.h>  // rand()
-#include <time.h>    // time()
+#include <stdlib.h>    // rand()
+#include <time.h>      // time()
 
 //#include <boost/program_options.hpp>
 //#include <boost/format.hpp>
@@ -24,7 +23,7 @@ void print_vector(const char *msg, const V &v) {
     std::cout << std::endl;
 }
 
-void print_tree(BinaryTreeNode *root)
+void run_traversals(BinaryTreeNode *root)
 {
     auto v2v = [ ] (BinaryTreeNode *n, std::vector<BinaryTreeNode *> *v) {
         if (n)
@@ -75,7 +74,13 @@ void print_tree(BinaryTreeNode *root)
     print_vector("h. levels :", levels);
     std::cout << std::endl;
 
-    algo::binary_tree_print(root);
+    bool is_bst = algo::binary_tree_is_bst(root);
+    std::cout << std::endl;
+    std::cout << "Is BST      : " << is_bst << std::endl;
+
+    bool is_balanced = algo::binary_tree_is_balanced(root);
+    std::cout << "Is balanced : " << is_balanced << std::endl;
+    std::cout << std::endl;
 }
 
 
@@ -83,30 +88,33 @@ int main(int argc, char *argv[])
 {
     srand(time(NULL));
 
-    int n = 15;
+    BinaryTreeNode *root;
+    int n = 10;
     int cnt = 1;
 
-    BinaryTreeNode *root;
+    // random BT
+
     root = algo::binary_tree_new_node<BinaryTreeNode>(cnt++);
 
     for (int i = cnt; i <= n; i++) {
-        algo::binary_tree_insert_randomly(root,
-                                          algo::binary_tree_new_node
-                                          <BinaryTreeNode>(cnt++));
+        algo::binary_tree_insert_randomly(root, cnt++);
     }
 
-    /*
-    algo::binary_tree_insert_bst(root,
-                                 algo::binary_tree_new_node
-                                 <BinaryTreeNode>(cnt++));
-    */
-    //algo::binary_tree_insert_bst(root,
-    //                             algo::binary_tree_new_node
-    //                             <BinaryTreeNode>(cnt++));
+    run_traversals(root);
+    algo::binary_tree_print(root);
+    algo::binary_tree_destroy_tree(root);
 
-    print_tree(root);
+    // random BST
 
-    algo::binary_tree_delete(root);
+    root = algo::binary_tree_new_node<BinaryTreeNode>(rand() % n + 1);
+
+    for (int i = 0; i < n; i++) {
+        algo::binary_tree_insert_bst(root, rand() % n + 1);
+    }
+
+    run_traversals(root);
+    algo::binary_tree_print(root);
+    algo::binary_tree_destroy_tree(root);
 
     return 0;
 }

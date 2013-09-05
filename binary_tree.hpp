@@ -1,7 +1,7 @@
 /// ****************************************************************************
 ///
 /// @file   : binary_tree.hpp
-/// @brief  : Algorithms to deal with binary trees
+/// @brief  : Binary tree algorithms
 ///
 /// @author : Alexander Korobeynikov (alexander.korobeynikov@gmail.com)
 ///
@@ -38,7 +38,7 @@ struct binary_tree_node
 ///
 /// @param[in]  value            date value for the newly created node
 /// @param[in]  date,left,right  [opt] pointers to data,left,right members
-/// @return                      pointer to a newly created node
+/// @return                      a newly created node
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type>
 TreeNode*
@@ -58,31 +58,54 @@ binary_tree_new_node(DataType value = DataType(),
 /// ----------------------------------------------------------------------------
 /// @brief Destroys a node of a binary tree.
 ///
-/// @param[in]  node  pointer to a node to be destroyed
+/// @param[in]  node  node to be destroyed
 /// @param[in]  date  [opt] pointers to data,left,right members
 /// @return           void
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type>
 void
-binary_tree_delete_node(TreeNode* node,
-                        DataType  TreeNode::* data  = &TreeNode::data)
+binary_tree_destroy_node(TreeNode* node,
+                         DataType  TreeNode::* data  = &TreeNode::data)
 {
-    TDEBUG(("- delete: %s\n") % node->*data);
+    TDEBUG(("- destroy: %s\n") % node->*data);
     node->left = nullptr;
     node->right = nullptr;
     delete node;
 }
 
 /// ----------------------------------------------------------------------------
+/// @brief Destroyes a binary tree. Extra memory O(n).
+///
+/// @param[in]  root             root of the binary tree
+/// @param[in]  data,left,right  [opt] pointers to data,left,right members
+/// @return                      void
+template <typename TreeNode, typename DataType = typename TreeNode::data_type>
+void
+binary_tree_destroy_tree(TreeNode* root,
+                         DataType TreeNode::*data = &TreeNode::data,
+                         TreeNode* TreeNode::*left = &TreeNode::left,
+                         TreeNode* TreeNode::*right = &TreeNode::right)
+{
+    // run inorder traversal and destroy the nodes
+    // as we visit them
+    binary_tree_traverse_inorder(root,
+                                 [ &data ] (TreeNode *node) {
+                                     binary_tree_destroy_node(node, data);
+                                 },
+                                 left, right);
+}
+
+/// ----------------------------------------------------------------------------
 /// @brief Inserts a node into a binary tree at a random position
 ///
-/// @param[in]  root        pointer to the root of the binary tree
-/// @param[in]  newnode     pointer to a new node to be inserted
+/// @param[in]  root        root of the binary tree
+/// @param[in]  value       a value to be inserted
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                 pointer to the parent of the just inserted node
-template <typename TreeNode>
+/// @return                 a new node with a given value
+template <typename TreeNode,
+          typename DataType = typename TreeNode::data_type>
 TreeNode*
-binary_tree_insert_randomly(TreeNode* root, TreeNode* newnode,
+binary_tree_insert_randomly(TreeNode* root, DataType value,
                             TreeNode* TreeNode::* left  = &TreeNode::left,
                             TreeNode* TreeNode::* right = &TreeNode::right)
 {
@@ -99,13 +122,15 @@ binary_tree_insert_randomly(TreeNode* root, TreeNode* newnode,
         node = node->*child;
     }
 
-    prev->*child = newnode;
-    return prev;
+    prev->*child =
+        binary_tree_new_node<TreeNode, DataType>(value);
+    return prev->*child;
 }
 
 /// ----------------------------------------------------------------------------
 /// @brief Functor that compares values of two binary tree nodes
 ///
+/*
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type,
           typename Comparator = std::less<DataType> >
@@ -118,20 +143,21 @@ struct binary_tree_node_comparator
         return comp(n1->*data, n2->*data);
     }
 };
+*/
 
 /// ----------------------------------------------------------------------------
 /// @brief Inserts a node into a binary search tree
 ///
-/// @param[in]  root             pointer to the root of the binary tree
-/// @param[in]  newnode          pointer to a new node to be inserted
+/// @param[in]  root             root of the binary tree
+/// @param[in]  value            a new value to be inserted
 /// @param[in]  comp             [opt] comparator used to compare two nodes
 /// @param[in]  data,left,right  [opt] pointers to data,left,right members
-/// @return                      pointer to the parent of the just inserted node
+/// @return                      a node with a given value
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type,
           typename Comparator = std::less<DataType> >
 TreeNode*
-binary_tree_insert_bst(TreeNode* node, TreeNode* newnode,
+binary_tree_insert_bst(TreeNode* node, DataType value,
                        Comparator comp = Comparator(),
                        DataType  TreeNode::* data  = &TreeNode::data,
                        TreeNode* TreeNode::* left  = &TreeNode::left,
@@ -143,8 +169,8 @@ binary_tree_insert_bst(TreeNode* node, TreeNode* newnode,
     TreeNode* prev = nullptr;
     TreeNode* TreeNode::* child = nullptr;
 
-    while (node) {
-        if (comp(node->*data, newnode->*data)) {
+    while (node && (node->*data != value)) {
+        if (comp(value, node->*data)) {
             child = left;
         } else {
             child = right;
@@ -152,40 +178,53 @@ binary_tree_insert_bst(TreeNode* node, TreeNode* newnode,
         prev = node;
         node = node->*child;
     }
-    prev->*child = newnode;
-    return prev;
+
+    if (!node) {
+        prev->*child =
+            binary_tree_new_node<TreeNode, DataType>(value, data, left, right);
+        node = prev->*child;
+    } else {
+        TDEBUG(("node already exists: %-03s (%p)\n") % value % node);
+    }
+
+    return node;
 }
 
-/*
+/// ----------------------------------------------------------------------------
+/// @brief Searches a given value in BST
+///
+/// @param[in]  root             root of the binary tree
+/// @param[in]  value            value to search for
+/// @param[in]  comp             [opt] comparator used to compare two nodes
+/// @param[in]  data,left,right  [opt] pointers to data,left,right members
+/// @return                      node with the value, if exists, null otherwise
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type,
           typename Comparator = std::less<DataType> >
-bool
-binary_tree_is_bst_node(TreeNode* node,
-                        Comparator comp = Comparator(),
-                        DataType  TreeNode::* data  = &TreeNode::data,
-                        TreeNode* TreeNode::* left  = &TreeNode::left,
-                        TreeNode* TreeNode::* right = &TreeNode::right)
+TreeNode*
+binary_tree_search_bst(TreeNode* node, DataType value,
+                       Comparator comp = Comparator(),
+                       DataType  TreeNode::* data  = &TreeNode::data,
+                       TreeNode* TreeNode::* left  = &TreeNode::left,
+                       TreeNode* TreeNode::* right = &TreeNode::right)
 {
-    if (!node) {
-        return true;
-    }
-
-    if (node->*left) {
-        if (!comp(node->*left->*data, node->*data)) {
-            return false;
+    while (node && (value != node->*data)) {
+        if (comp(value, node->*data)) {
+            node = node->*left;
+        } else {
+            node = node->*right;
         }
     }
-
-    if (node->*right) {
-        if (!comp(node->*data, node->*right->*data)) {
-            return false;
-        }
-    }
-
-    return true;
+    return node;
 }
 
+/// ----------------------------------------------------------------------------
+/// @brief Checks if a given BT is a BST
+///
+/// @param[in]  root             root of the binary tree
+/// @param[in]  comp             [opt] comparator used to compare two nodes
+/// @param[in]  data,left,right  [opt] pointers to data,left,right members
+/// @return                      true if BST, false otherwise
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type,
           typename Comparator = std::less<DataType> >
@@ -196,54 +235,82 @@ binary_tree_is_bst(TreeNode* root,
                    TreeNode* TreeNode::* left  = &TreeNode::left,
                    TreeNode* TreeNode::* right = &TreeNode::right)
 {
-    if (!root)
-        return true;
 
     bool is_bst = true;
     TreeNode *prev = nullptr;
 
-    auto check = [ & ] (TreeNode *node) {
-        if (prev && !comp(prev->*data, node->*data))
-            is_bst = false;
+    auto is_bst_cb = [ & ] (TreeNode* node) {
+        if (prev && is_bst) {
+            is_bst = comp(prev->*data, node->*data);
+        }
         prev = node;
     };
 
-    binary_tree_traverse_inorder(root, check, left, right);
+    binary_tree_traverse_inorder(root, is_bst_cb);
+
     return is_bst;
 }
-*/
 
 /// ----------------------------------------------------------------------------
-/// @brief Destroyes a binary tree. Extra memory O(n).
+/// @brief Checks if a given BT is a balanced BT
 ///
-/// @param[in]  root             pointer to the root of the binary tree
+/// @param[in]  root             root of the binary tree
+/// @param[in]  comp             [opt] comparator used to compare two nodes
 /// @param[in]  data,left,right  [opt] pointers to data,left,right members
-/// @return                      void
+/// @return                      true if BT is balanced, false otherwise
 template <typename TreeNode,
-          typename DataType = typename TreeNode::data_type>
-void
-binary_tree_delete(TreeNode* root,
-                   DataType  TreeNode::* data  = &TreeNode::data,
-                   TreeNode* TreeNode::* left  = &TreeNode::left,
-                   TreeNode* TreeNode::* right = &TreeNode::right)
+          typename DataType = typename TreeNode::data_type,
+          typename Comparator = std::less<DataType> >
+bool
+binary_tree_is_balanced(TreeNode* root,
+                        Comparator comp = Comparator(),
+                        DataType  TreeNode::* data  = &TreeNode::data,
+                        TreeNode* TreeNode::* left  = &TreeNode::left,
+                        TreeNode* TreeNode::* right = &TreeNode::right)
 {
-    // run inorder traversal and destroy the nodes
-    // as we visit them
-    binary_tree_traverse_inorder(root,
-                                 [ &data ] (TreeNode *node) {
-                                     binary_tree_delete_node(node, data);
-                                 },
-                                 left, right);
+
+    std::map<TreeNode*, int> n2h;
+
+    auto balanced_cb = [ & ] (TreeNode* node) {
+
+        int h_left = 0, h_right = 0;
+        if (node->*left) {
+            h_left = n2h[node->*left];
+        }
+        if (node->*right) {
+            h_right = n2h[node->*right];
+        }
+
+        if (h_left == -1 || h_right == -1 ||
+            std::abs(h_left - h_right) > 1) {
+            // left or right subtree is not balanced
+            // or balance is broken at this node
+            n2h[node] = -1;
+        } else if (node->*left || node->*right) {
+            // if any child exists, calculate height
+            n2h[node] = std::max(h_left, h_right) + 1;
+        } else {
+            // leaf
+            n2h[node] = 0;
+        }
+
+        TDEBUG(("data = %2s, hl = %2s, hr = %2s, h = %2s\n")
+               % node->data % h_left % h_right % n2h[node]);
+    };
+
+    binary_tree_traverse_postorder(root, balanced_cb);
+
+    return n2h[root] >= 0;
 }
 
 /// ----------------------------------------------------------------------------
 /// @brief Inorder traversal of a binary tree.
 ///        One stack solution with O(n) extra memory.
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_inorder(TreeNode* node, Visitor visit,
@@ -273,10 +340,10 @@ binary_tree_traverse_inorder(TreeNode* node, Visitor visit,
 /// @brief Preorder traversal of a binary tree.
 ///        One stack solution with O(n) extra memory.
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_preorder(TreeNode* node, Visitor visit,
@@ -307,10 +374,10 @@ binary_tree_traverse_preorder(TreeNode* node, Visitor visit,
 /// @brief Postorder traversal of a binary tree.
 ///        One stack solution with O(n) extra memory.
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_postorder(TreeNode* node, Visitor visit,
@@ -360,10 +427,10 @@ binary_tree_traverse_postorder(TreeNode* node, Visitor visit,
 /// @brief Postorder traversal of a binary tree.
 ///        Another one stack solution with O(n) extra memory.
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_postorder1(TreeNode* node, Visitor visit,
@@ -405,10 +472,10 @@ binary_tree_traverse_postorder1(TreeNode* node, Visitor visit,
 /// @brief Postorder traversal of a binary tree.
 ///        Two stacks solution with O(n) extra memory. Reduction to preorder.
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_postorder2(TreeNode* node, Visitor visit,
@@ -444,10 +511,10 @@ binary_tree_traverse_postorder2(TreeNode* node, Visitor visit,
 /// ----------------------------------------------------------------------------
 /// @brief Recursive inorder traversal of a binary tree. Extra memory O(n).
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_inorder_r(TreeNode* root, Visitor visit,
@@ -465,7 +532,7 @@ binary_tree_traverse_inorder_r(TreeNode* root, Visitor visit,
 /// ----------------------------------------------------------------------------
 /// @brief Recursive preorder traversal of a binary tree. Extra memory O(n).
 ///
-/// @param[in]  root         pointer to the root of the binary tree
+/// @param[in]  root         root of the binary tree
 /// @param[in]  visit        visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
 /// @return                  void
@@ -486,7 +553,7 @@ binary_tree_traverse_preorder_r(TreeNode* root, Visitor visit,
 /// ----------------------------------------------------------------------------
 /// @brief Recursive postorder traversal of a binary tree. Extra memory O(n).
 ///
-/// @param[in]  root         pointer to the root of the binary tree
+/// @param[in]  root         root of the binary tree
 /// @param[in]  visit        visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
 /// @return                  void
@@ -507,10 +574,10 @@ binary_tree_traverse_postorder_r(TreeNode* root, Visitor visit,
 /// ----------------------------------------------------------------------------
 /// @brief Level-order traversal of a binary tree. Stack with O(n) extra memory.
 ///
-/// @param[in]  root         pointer to the root of the binary tree
-/// @param[in]  visit        visitor callback
+/// @param[in]  root        root of the binary tree
+/// @param[in]  visit       visitor callback
 /// @param[in]  left,right  [opt] pointers to left,right members
-/// @return                  void
+/// @return                 void
 template <typename TreeNode, typename Visitor>
 void
 binary_tree_traverse_levels(TreeNode* root, Visitor visit,
@@ -548,10 +615,10 @@ binary_tree_traverse_levels(TreeNode* root, Visitor visit,
 /// ----------------------------------------------------------------------------
 /// @brief Prints out a single node of a binary tree.
 ///
-/// @param[in]  node   pointer to a node to be printed
+/// @param[in]  node  a node to be printed
 /// @param[in]  out   [opt] out stream (default, std::cout)
 /// @param[in]  data  [opt] pointer to the data member
-/// @return                 void
+/// @return           void
 template <typename TreeNode,
           typename DataType = typename TreeNode::data_type>
 void
@@ -565,7 +632,7 @@ binary_tree_print_node(TreeNode* node,
 /// ----------------------------------------------------------------------------
 /// @brief Prints out a diagram of a binary tree.
 ///
-/// @param[in]  root             pointer to the root of the binary tree
+/// @param[in]  root             root of the binary tree
 /// @param[in]  outs             [opt] out stream (default, std::cout)
 /// @param[in]  printnode        [opt] callback to print a node
 /// @param[in]  date,left,right  [opt] pointers to data,left,right members
