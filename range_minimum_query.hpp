@@ -111,8 +111,8 @@ sparse_table rmq_sparse_table_build(RandomIterator begin, RandomIterator end,
 }
 
 /// ----------------------------------------------------------------------------
-/// @brief Generic RMQ with a sparse table.
-///        Time O(1). Memory O(1).
+/// @brief RMQ with a sparse table.
+///        Time O(1).
 ///
 /// @param[in]  st          sparse table built with rmq_sparse_table_build()
 /// @param[in]  begin,end   random iterator to the start,end of the input array
@@ -216,8 +216,8 @@ size_type rmq_segment_tree_build(RandomIterator begin, RandomIterator end,
 }
 
 /// ----------------------------------------------------------------------------
-/// @brief Builds a segment tree for generic RMQ (recursively!).
-///        Time O(N). Space O(N).
+/// @brief RMQ with a segment tree.
+///        Time O(NlogN).
 ///
 /// @param[in] begin,end     random iterator to the begin,end of the input array
 /// @param[in] st            segment tree
